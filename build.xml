@@ -1,0 +1,114 @@
+<project name="Simple SFDC build script" default="" basedir="." xmlns:sf="antlib:com.salesforce">
+	<taskdef name="deploypurge" classname="com.salesforce.ant.SFDCDeployPurge" />
+
+	<property file="build.properties" />
+	<property environment="env" />
+	<property name="checked" value="[done]" />
+
+	<import file="lib/utilities.xml" />
+
+	<classpath>
+		<path id="sfdc.classpath">
+			<fileset dir="lib">
+				<include name="**/*.jar" />
+			</fileset>
+		</path>
+	</classpath>
+
+	<target name="help">
+		<echo message="Available Target" />
+		<echo message="============================================================================================">
+		</echo>
+		<echo message=" deploy           : deploy code and metadata information " />
+		<echo message=" undeploy         : Clean up the orgs based on metadata in XML file " />
+		<echo message=" testdeploy       : ONLY TESTING deploy code and metadata information  " />
+		<echo message=" retrieve         : retrieve all codes based on metadata information " />
+		<echo message="============================================================================================">
+		</echo>
+	</target>
+
+	<target name="deploy">
+		<echo message="Deploying code " />
+		<echo message="============================================================================================">
+		</echo>
+		<antcall target="sfdeploy">
+			<param name="deploydir" value="${sf.deployfolder}" />
+		</antcall>
+		<!-- run all the test -->
+		<record name="TestOutput.log" action="start" />
+		<sf:compileAndTest username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}">
+			<runTests Alltests="true" />
+		</sf:compileAndTest>
+		<record name="TestOutput.log" action="stop" />
+		<echo message="============================================================================================">
+		</echo>
+	</target>
+
+	<target name="undeploy">
+		<echo message="Undeploy Org based on metadata" />
+		<echo message="============================================================================================">
+		</echo>
+
+		<antcall target="cleandir">
+			<param name="sourcedir" value="${sf.undeployfolder}" />
+		</antcall>
+
+		<echo file="${sf.undeployfolder}/package.xml">
+			<![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+			<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+				<version>26.0</version>
+			</Package>]]></echo>
+
+		<copy tofile="${sf.undeployfolder}/destructiveChanges.xml">
+			<fileset file="${sf.retrievemetadata}">
+			</fileset>
+		</copy>
+
+		<deploypurge purgeOnDelete="true" username="${sf.username}" password="${sf.password}" serverurl="${sf.serverurl}" deployRoot="${sf.undeployfolder}" runAllTests="false" rollbackOnError="false" allowMissingFiles="true" maxPoll="2000" pollWaitMillis="5000" />
+
+		<tstamp>
+			<format property="endtime" pattern="MM-dd-yyyy hh:mm:ss" />
+		</tstamp>
+
+		<echo message="============================================================================================">
+		</echo>
+		<echo message="Generated destructiveChanges.xml can be found at ${undeployfolder}/destructiveChanges.xml">
+		</echo>
+		<echo message="Clean up org success!... ${endtime} ${checked}">
+		</echo>
+	</target>
+
+	<target name="testdeploy">
+		<echo message="Deploying code " />
+		<echo message="============================================================================================">
+		</echo>
+		<antcall target="sfdeploytest">
+			<param name="deploydir" value="${sf.deployfolder}" />
+		</antcall>
+	</target>
+
+	<target name="retrieve">
+		<echo message="Retrieve code " />
+		<echo message="============================================================================================">
+		</echo>
+
+		<antcall target="cleanretrieveddir" />
+
+		<antcall target="sfretrievewithparam">
+			<param name="srcfile" value="${sf.retrievemetadata}" />
+			<param name="destdir" value="${sf.retrievefolder}" />
+		</antcall>
+
+		<tstamp>
+			<format property="endtime" pattern="MM-dd-yyyy hh:mm:ss" />
+		</tstamp>
+		<echo message="============================================================================================">
+		</echo>
+		<echo message="Retrieved code can be found at ${sf.retrievefolder}">
+		</echo>
+		<echo message="Retrieve code success!... ${endtime} ${checked}">
+		</echo>
+	</target>
+
+</project>
+
