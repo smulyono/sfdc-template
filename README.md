@@ -1,6 +1,6 @@
 # SFDC Project Template
 
-## What 
+## What
 
 Force.com IDE Project Template along with the ANT build scripts
 
@@ -15,4 +15,6 @@ available ant target
 * testdeploy, TESTing the deployment of the code
 
 * retrieve, retrieve code from the org based on src/package.xml
+
+* create, copy the project into the new project folder ( to create new empty project)
 
