@@ -1,19 +1,18 @@
 <project name="Simple SFDC build script" default="" basedir="." xmlns:sf="antlib:com.salesforce">
-	<taskdef name="deploypurge" classname="com.salesforce.ant.SFDCDeployPurge" />
+	<taskdef name="deploypurge"
+		classname="com.salesforce.ant.SFDCDeployPurge"
+		classpath="../lib/DF12Tools.jar"/>
+
+	<!-- omit this if ant-salesforce.jar already on your ant classpath -->
+	<taskdef uri="antlib:com.salesforce"
+		resource="com/salesforce/antlib.xml"
+		classpath="../lib/ant-salesforce.jar"/>
 
 	<property file="build.properties" />
 	<property environment="env" />
 	<property name="checked" value="[done]" />
 
 	<import file="lib/utilities.xml" />
-
-	<classpath>
-		<path id="sfdc.classpath">
-			<fileset dir="lib">
-				<include name="**/*.jar" />
-			</fileset>
-		</path>
-	</classpath>
 
 	<target name="help">
 		<echo message="Available Target" />
@@ -23,6 +22,7 @@
 		<echo message=" undeploy         : Clean up the orgs based on metadata in XML file " />
 		<echo message=" testdeploy       : ONLY TESTING deploy code and metadata information  " />
 		<echo message=" retrieve         : retrieve all codes based on metadata information " />
+		<echo message=" create           : clone this template as the new base project to the ${clone.destdir} -- will omit any .git and lib/ant-salesforce.jar" />
 		<echo message="============================================================================================">
 		</echo>
 	</target>
@@ -108,6 +108,33 @@
 		</echo>
 		<echo message="Retrieve code success!... ${endtime} ${checked}">
 		</echo>
+	</target>
+
+	<target name="create">
+		<echo message="Create " />
+		<echo message="============================================================================================">
+		</echo>
+		<input message="Specify the new project name " defaultvalue="newproject"
+			addproperty="createdir" />
+		<echo message="New project : ${createdir}" />
+		<echo message="Target Path : ${create.defaultdir}/${createdir}" />
+
+        <input message="Are you sure to continue for creating new project ?"
+                validargs="y,n"
+                addproperty="do.create">
+        </input>
+        <condition property="do.abort">
+                <equals arg1="n" arg2="${do.create}"/>
+        </condition>
+        <fail if="${do.abort}">Undeployment aborted by user</fail>
+
+        <copy todir="${create.defaultdir}/${createdir}">
+        	<fileset dir=".">
+        		<exclude name=".git" />
+    			<exclude name="**/ant-salesforce.jar" />
+        	</fileset>
+        </copy>
+        <echo message="Create new project ${newproject} done at ${create.defaultdir}/${newproject}" />
 	</target>
 
 </project>
