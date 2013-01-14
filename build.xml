@@ -134,7 +134,7 @@
     			<exclude name="**/ant-salesforce.jar" />
         	</fileset>
         </copy>
-        <echo message="Create new project ${newproject} done at ${create.defaultdir}/${newproject}" />
+        <echo message="Create new project ${createdir} done at ${create.defaultdir}/${createdir}" />
 	</target>
 
 </project>
